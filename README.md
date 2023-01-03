@@ -45,3 +45,8 @@ $ listparse -w rockyou.txt -o outfile.txt -n
 # Get all lines that contain the phrase "pass"
 $ listparse -w rockyou.txt -o outfile.txt -p pass
 ```
+
+```
+# Get all lines between 8 and 12 characters that have a special character and number
+$ listparse -w rockyou.txt -o outfile.txt -m 8 -x 12 -s -n
+```
