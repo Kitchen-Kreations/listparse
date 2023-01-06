@@ -1,4 +1,6 @@
 # listparse
+<img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/Kitchen-Kreations/listparse">
+<img alt="GitHub" src="https://img.shields.io/github/license/Kitchen-Kreations/listparse">
 Parse through a wordlist and get only the entries you want. Useful for limiting wordlists for brute-force attacks when password policy is known
 
 ## Quick Start
