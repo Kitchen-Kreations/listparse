@@ -56,7 +56,15 @@ func numOnly(s string) bool {
 	return true
 }
 
-func parse(wordlist string, output string, minLen string, maxLen string, phrase string, specialChar bool, replace bool, number bool) {
+func genericCheck(line string, maxLen int, minLen int, phrase string) bool {
+	if len(line) <= maxLen && len(line) >= minLen && strings.Contains(strings.ToLower(line), strings.ToLower(phrase)) {
+		return true
+	} else {
+		return false
+	}
+}
+
+func parse(wordlist string, output string, minLen string, maxLen string, phrase string, specialChar bool, replaceFile string, number bool) {
 	file, err := os.Open(wordlist)
 	if err != nil {
 		fmt.Println("Error opening wordlist")
@@ -110,7 +118,7 @@ func parse(wordlist string, output string, minLen string, maxLen string, phrase 
 	if specialChar && number {
 		for scanner.Scan() {
 			line := scanner.Text()
-			if len(line) <= maxLenint && len(line) >= minLenint && strings.Contains(strings.ToLower(line), strings.ToLower(phrase)) && alphaOnly(line) == false && strings.ContainsAny(line, "0123456789") {
+			if genericCheck(line, maxLenint, minLenint, phrase) && alphaOnly(line) == false && strings.ContainsAny(line, "0123456789") {
 				if _, err := outfile.Write([]byte(line + "\n")); err != nil {
 					fmt.Println("Error Writing to out file")
 					os.Exit(1)
@@ -122,7 +130,7 @@ func parse(wordlist string, output string, minLen string, maxLen string, phrase 
 	} else if specialChar {
 		for scanner.Scan() {
 			line := scanner.Text()
-			if len(line) <= maxLenint && len(line) >= minLenint && strings.Contains(strings.ToLower(line), strings.ToLower(phrase)) && alphaOnly(line) == false {
+			if genericCheck(line, maxLenint, minLenint, phrase) && alphaOnly(line) == false {
 				if _, err := outfile.Write([]byte(line + "\n")); err != nil {
 					fmt.Println("Error Writing to out file")
 					os.Exit(1)
@@ -134,7 +142,7 @@ func parse(wordlist string, output string, minLen string, maxLen string, phrase 
 	} else if number {
 		for scanner.Scan() {
 			line := scanner.Text()
-			if len(line) <= maxLenint && len(line) >= minLenint && strings.Contains(strings.ToLower(line), strings.ToLower(phrase)) && strings.ContainsAny(line, "0123456789") {
+			if genericCheck(line, maxLenint, minLenint, phrase) && strings.ContainsAny(line, "0123456789") {
 				if _, err := outfile.Write([]byte(line + "\n")); err != nil {
 					fmt.Println("Error Writing to out file")
 					os.Exit(1)
@@ -146,7 +154,7 @@ func parse(wordlist string, output string, minLen string, maxLen string, phrase 
 	} else {
 		for scanner.Scan() {
 			line := scanner.Text()
-			if len(line) <= maxLenint && len(line) >= minLenint && strings.Contains(strings.ToLower(line), strings.ToLower(phrase)) {
+			if genericCheck(line, maxLenint, minLenint, phrase) {
 				if _, err := outfile.Write([]byte(line + "\n")); err != nil {
 					fmt.Println("Error Writing to out file")
 					os.Exit(1)
@@ -173,7 +181,7 @@ func parse(wordlist string, output string, minLen string, maxLen string, phrase 
 func main() {
 	start := time.Now()
 	// init parser
-	parser := argparse.NewParser("list-parse", "Creates more customized wordlist")
+	parser := argparse.NewParser("listparse", "Creates more customized wordlist")
 
 	// flags
 	var wordlist *string = parser.String("w", "wordlist", &argparse.Options{Required: true, Help: "Wordlist to parse through; Full path to wordlist"})
@@ -183,7 +191,7 @@ func main() {
 	var phrase *string = parser.String("p", "phrase", &argparse.Options{Required: false, Help: "Phrase/word that is required to be in the line", Default: ""})
 	var specialChar *bool = parser.Flag("s", "require-special-characters", &argparse.Options{Required: false, Help: "Require special characters"})
 	var number *bool = parser.Flag("n", "require-number", &argparse.Options{Required: false, Help: "Require Number"})
-	var replcLttrWSpecChar *bool = parser.Flag("r", "replace-letters", &argparse.Options{Required: false, Help: "Replace Letters with special characters in phrase search"})
+	var replcLttrWSpecChar *string = parser.String("r", "replace-letters", &argparse.Options{Required: false, Help: "Full path to rules for character replacement", Default: ""})
 
 	// parse through arguments given
 	err := parser.Parse(os.Args)
