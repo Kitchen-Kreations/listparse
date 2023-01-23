@@ -1,5 +1,7 @@
-# list-parse
-Parse through a wordlist and get only the entries you want. Useful for limiting wordlists for brute-force attacks when password policy is known
+# listparse
+<img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/Kitchen-Kreations/listparse"> <img alt="GitHub" src="https://img.shields.io/github/license/Kitchen-Kreations/listparse"> <img alt="GitHub all releases" src="https://img.shields.io/github/downloads/Kitchen-Kreations/listparse/total">
+
+Parse through a wordlist and get only the entries you want. Useful for limiting wordlists for brute-force & dictionary attacks when password policy is known
 
 ## Quick Start
 To get started, Download the latest release or compile from source
@@ -44,4 +46,9 @@ $ listparse -w rockyou.txt -o outfile.txt -n
 ```
 # Get all lines that contain the phrase "pass"
 $ listparse -w rockyou.txt -o outfile.txt -p pass
+```
+
+```
+# Get all lines between 8 and 12 characters that have a special character and number
+$ listparse -w rockyou.txt -o outfile.txt -m 8 -x 12 -s -n
 ```
