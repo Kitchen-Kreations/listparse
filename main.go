@@ -64,7 +64,7 @@ func genericCheck(line string, maxLen int, minLen int, phrase string) bool {
 	}
 }
 
-func parse(wordlist string, output string, minLen string, maxLen string, phrase string, specialChar bool, replaceFile string, number bool) {
+func parse(wordlist string, output string, minLen string, maxLen string, phrase string, specialChar bool, number bool) {
 	file, err := os.Open(wordlist)
 	if err != nil {
 		fmt.Println("Error opening wordlist")
@@ -191,7 +191,6 @@ func main() {
 	var phrase *string = parser.String("p", "phrase", &argparse.Options{Required: false, Help: "Phrase/word that is required to be in the line", Default: ""})
 	var specialChar *bool = parser.Flag("s", "require-special-characters", &argparse.Options{Required: false, Help: "Require special characters"})
 	var number *bool = parser.Flag("n", "require-number", &argparse.Options{Required: false, Help: "Require Number"})
-	var replcLttrWSpecChar *string = parser.String("r", "replace-letters", &argparse.Options{Required: false, Help: "Full path to rules for character replacement", Default: ""})
 
 	// parse through arguments given
 	err := parser.Parse(os.Args)
@@ -199,7 +198,7 @@ func main() {
 		fmt.Print(parser.Usage(err))
 	}
 
-	parse(*wordlist, *output, *minLen, *maxLen, *phrase, *specialChar, *replcLttrWSpecChar, *number)
+	parse(*wordlist, *output, *minLen, *maxLen, *phrase, *specialChar, *number)
 	elapsed := time.Since(start)
 	fmt.Println("\nParsed in", elapsed)
 }
