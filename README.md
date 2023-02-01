@@ -4,7 +4,8 @@
 Parse through a wordlist and get only the entries you want. Useful for limiting wordlists for brute-force & dictionary attacks when password policy is known
 
 ## Quick Start
-To get started, Download the latest release or compile from source
+To get started, Download the latest release or compile from source.
+If you're download from linux you can also use the install.sh script
 
 ```
 # listparse help
