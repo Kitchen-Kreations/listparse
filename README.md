@@ -12,7 +12,7 @@ $ listparse -h
 usage: list-parse [-h|--help] -w|--wordlist "<value>" -o|--output "<value>"
                   [-m|--min-length "<value>"] [-x|--max-length "<value>"]
                   [-p|--phrase "<value>"] [-s|--require-special-characters]
-                  [-n|--require-number] [-r|--replace-letters]
+                  [-n|--require-number]
 
                   Creates more customized wordlist
 
@@ -28,8 +28,6 @@ Arguments:
                                     line. Default:
   -s  --require-special-characters  Require special characters
   -n  --require-number              Require Number
-  -r  --replace-letters             Replace Letters with special characters in
-                                    phrase search
 ```
 *Please note -r currently does not work*
 ## Examples

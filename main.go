@@ -64,7 +64,7 @@ func genericCheck(line string, maxLen int, minLen int, phrase string) bool {
 	}
 }
 
-func parse(wordlist string, output string, minLen string, maxLen string, phrase string, specialChar bool, number bool) {
+func parse(wordlist string, output string, minLen string, maxLen string, phrase string, specialChar bool, number bool, verbose bool) {
 	file, err := os.Open(wordlist)
 	if err != nil {
 		fmt.Println("Error opening wordlist")
@@ -72,10 +72,18 @@ func parse(wordlist string, output string, minLen string, maxLen string, phrase 
 	}
 	defer file.Close()
 
+	if verbose {
+		fmt.Println("Opened: ", wordlist)
+	}
+
 	count, err := lineCounter(file)
 	if err != nil {
 		fmt.Println("Error Reading wordlist")
 		os.Exit(1)
+	}
+
+	if verbose {
+		fmt.Println("Found ", count, " lines")
 	}
 
 	file, err = os.Open(wordlist)
@@ -119,6 +127,9 @@ func parse(wordlist string, output string, minLen string, maxLen string, phrase 
 		for scanner.Scan() {
 			line := scanner.Text()
 			if genericCheck(line, maxLenint, minLenint, phrase) && alphaOnly(line) == false && strings.ContainsAny(line, "0123456789") {
+				if verbose {
+					fmt.Println("Found: ", line)
+				}
 				if _, err := outfile.Write([]byte(line + "\n")); err != nil {
 					fmt.Println("Error Writing to out file")
 					os.Exit(1)
@@ -191,6 +202,7 @@ func main() {
 	var phrase *string = parser.String("p", "phrase", &argparse.Options{Required: false, Help: "Phrase/word that is required to be in the line", Default: ""})
 	var specialChar *bool = parser.Flag("s", "require-special-characters", &argparse.Options{Required: false, Help: "Require special characters"})
 	var number *bool = parser.Flag("n", "require-number", &argparse.Options{Required: false, Help: "Require Number"})
+	var verbose *bool = parser.Flag("v", "verbose", &argparse.Options{Required: false, Help: "Verbose mode"})
 
 	// parse through arguments given
 	err := parser.Parse(os.Args)
@@ -198,7 +210,7 @@ func main() {
 		fmt.Print(parser.Usage(err))
 	}
 
-	parse(*wordlist, *output, *minLen, *maxLen, *phrase, *specialChar, *number)
+	parse(*wordlist, *output, *minLen, *maxLen, *phrase, *specialChar, *number, *verbose)
 	elapsed := time.Since(start)
 	fmt.Println("\nParsed in", elapsed)
 }
