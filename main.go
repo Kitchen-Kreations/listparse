@@ -3,13 +3,20 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 
+	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/app"
+	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/layout"
+	"fyne.io/fyne/v2/widget"
 	"github.com/akamensky/argparse"
 	"github.com/schollz/progressbar/v3"
 )
@@ -47,15 +54,6 @@ func alphaOnly(s string) bool {
 	return true
 }
 
-func numOnly(s string) bool {
-	for _, char := range s {
-		if !strings.Contains(nums, strings.ToLower(string(char))) {
-			return false
-		}
-	}
-	return true
-}
-
 func genericCheck(line string, maxLen int, minLen int, phrase string) bool {
 	if len(line) <= maxLen && len(line) >= minLen && strings.Contains(strings.ToLower(line), strings.ToLower(phrase)) {
 		return true
@@ -64,11 +62,10 @@ func genericCheck(line string, maxLen int, minLen int, phrase string) bool {
 	}
 }
 
-func parse(wordlist string, output string, minLen string, maxLen string, phrase string, specialChar bool, number bool, verbose bool) {
+func parse(wordlist string, output string, minLen string, maxLen string, phrase string, specialChar bool, number bool, verbose bool) error {
 	file, err := os.Open(wordlist)
 	if err != nil {
-		fmt.Println("Error opening wordlist")
-		os.Exit(1)
+		return errors.New("error Opening Wordlist")
 	}
 	defer file.Close()
 
@@ -78,8 +75,7 @@ func parse(wordlist string, output string, minLen string, maxLen string, phrase 
 
 	count, err := lineCounter(file)
 	if err != nil {
-		fmt.Println("Error Reading wordlist")
-		os.Exit(1)
+		return errors.New("error Reading Wordlist")
 	}
 
 	if verbose {
@@ -88,8 +84,7 @@ func parse(wordlist string, output string, minLen string, maxLen string, phrase 
 
 	file, err = os.Open(wordlist)
 	if err != nil {
-		fmt.Println("Error opening wordlist")
-		os.Exit(1)
+		return errors.New("error Opening Wordlist")
 	}
 	defer file.Close()
 
@@ -101,20 +96,17 @@ func parse(wordlist string, output string, minLen string, maxLen string, phrase 
 
 	minLenint, err := strconv.Atoi(minLen)
 	if err != nil {
-		fmt.Println("Please put an integer for minlen")
-		os.Exit(1)
+		return errors.New("minlen must be an integer")
 	}
 
 	maxLenint, err := strconv.Atoi(maxLen)
 	if err != nil {
-		fmt.Println("Please put an interger for maxlen")
-		os.Exit(1)
+		return errors.New("maxlen must be an integer")
 	}
 
 	outfile, err := os.OpenFile(output, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		fmt.Println("Unable to create out file")
-		os.Exit(1)
+		return errors.New("unable to Create outfile")
 	}
 
 	bar := progressbar.NewOptions(count,
@@ -126,7 +118,7 @@ func parse(wordlist string, output string, minLen string, maxLen string, phrase 
 	if specialChar && number {
 		for scanner.Scan() {
 			line := scanner.Text()
-			if genericCheck(line, maxLenint, minLenint, phrase) && alphaOnly(line) == false && strings.ContainsAny(line, "0123456789") {
+			if genericCheck(line, maxLenint, minLenint, phrase) && !alphaOnly(line) && strings.ContainsAny(line, "0123456789") {
 				if verbose {
 					fmt.Println("Found: ", line)
 				}
@@ -141,7 +133,7 @@ func parse(wordlist string, output string, minLen string, maxLen string, phrase 
 	} else if specialChar {
 		for scanner.Scan() {
 			line := scanner.Text()
-			if genericCheck(line, maxLenint, minLenint, phrase) && alphaOnly(line) == false {
+			if genericCheck(line, maxLenint, minLenint, phrase) && !alphaOnly(line) {
 				if _, err := outfile.Write([]byte(line + "\n")); err != nil {
 					fmt.Println("Error Writing to out file")
 					os.Exit(1)
@@ -177,16 +169,15 @@ func parse(wordlist string, output string, minLen string, maxLen string, phrase 
 	}
 
 	if err := scanner.Err(); err != nil {
-		fmt.Println("Error reading lines")
-		os.Exit(1)
+		return errors.New("error reading lines")
 	}
 
 	if err := outfile.Close(); err != nil {
-		fmt.Println("Error Closing outfile")
-		os.Exit(1)
+		return errors.New("error closing outfile")
 	}
 
 	fmt.Println("Found " + strconv.Itoa(found) + " Passwords")
+	return nil
 }
 
 func main() {
@@ -194,15 +185,18 @@ func main() {
 	// init parser
 	parser := argparse.NewParser("listparse", "Creates more customized wordlist")
 
+	guiCmd := parser.NewCommand("gui", "Launch listparse's gui")
+	mainCmd := parser.NewCommand("parser", "User listparse as a command line tool")
+
 	// flags
-	var wordlist *string = parser.String("w", "wordlist", &argparse.Options{Required: true, Help: "Wordlist to parse through; Full path to wordlist"})
-	var output *string = parser.String("o", "output", &argparse.Options{Required: true, Help: "File to output to"})
-	var minLen *string = parser.String("m", "min-length", &argparse.Options{Required: false, Help: "Minimum length of line", Default: "0"})
-	var maxLen *string = parser.String("x", "max-length", &argparse.Options{Required: false, Help: "Maximum length of line", Default: "0"})
-	var phrase *string = parser.String("p", "phrase", &argparse.Options{Required: false, Help: "Phrase/word that is required to be in the line", Default: ""})
-	var specialChar *bool = parser.Flag("s", "require-special-characters", &argparse.Options{Required: false, Help: "Require special characters"})
-	var number *bool = parser.Flag("n", "require-number", &argparse.Options{Required: false, Help: "Require Number"})
-	var verbose *bool = parser.Flag("v", "verbose", &argparse.Options{Required: false, Help: "Verbose mode"})
+	var wordlist *string = mainCmd.String("w", "wordlist", &argparse.Options{Required: true, Help: "Wordlist to parse through; Full path to wordlist"})
+	var output *string = mainCmd.String("o", "output", &argparse.Options{Required: true, Help: "File to output to"})
+	var minLen *string = mainCmd.String("m", "min-length", &argparse.Options{Required: false, Help: "Minimum length of line", Default: "0"})
+	var maxLen *string = mainCmd.String("x", "max-length", &argparse.Options{Required: false, Help: "Maximum length of line", Default: "0"})
+	var phrase *string = mainCmd.String("p", "phrase", &argparse.Options{Required: false, Help: "Phrase/word that is required to be in the line", Default: ""})
+	var specialChar *bool = mainCmd.Flag("s", "require-special-characters", &argparse.Options{Required: false, Help: "Require special characters"})
+	var number *bool = mainCmd.Flag("n", "require-number", &argparse.Options{Required: false, Help: "Require Number"})
+	var verbose *bool = mainCmd.Flag("v", "verbose", &argparse.Options{Required: false, Help: "Verbose mode"})
 
 	// parse through arguments given
 	err := parser.Parse(os.Args)
@@ -210,7 +204,52 @@ func main() {
 		fmt.Print(parser.Usage(err))
 	}
 
-	parse(*wordlist, *output, *minLen, *maxLen, *phrase, *specialChar, *number, *verbose)
-	elapsed := time.Since(start)
-	fmt.Println("\nParsed in", elapsed)
+	if guiCmd.Happened() {
+		listparse := app.New()
+		main_window := listparse.NewWindow("listparse")
+		main_window.Resize(fyne.NewSize(600, 600))
+
+		// Widgets
+		wordlist_entry := widget.NewEntry()
+		output_entry := widget.NewEntry()
+		minLen_entry := widget.NewEntry()
+		maxLen_entry := widget.NewEntry()
+		phrase_entry := widget.NewEntry()
+		specialChar_check := widget.NewCheck("Special Character", func(b bool) {})
+		number_check := widget.NewCheck("Number", func(b bool) {})
+
+		error_text := widget.NewLabel("")
+
+		form := &widget.Form{
+			Items: []*widget.FormItem{
+				{Text: "Wordlist Path: ", Widget: wordlist_entry},
+				{Text: "Output Path: ", Widget: output_entry},
+				{Text: "Minimum Length: ", Widget: minLen_entry},
+				{Text: "Maximum Length: ", Widget: maxLen_entry},
+				{Text: "Phrase: ", Widget: phrase_entry},
+				{Text: "Special Character: ", Widget: specialChar_check},
+				{Text: "Number: ", Widget: number_check},
+			},
+			OnSubmit: func() {
+				err := parse(wordlist_entry.Text, output_entry.Text, minLen_entry.Text, maxLen_entry.Text, phrase_entry.Text, specialChar_check.Checked, number_check.Checked, false)
+				if err != nil {
+					error_text.SetText(err.Error())
+				}
+			},
+			OnCancel: func() {
+				listparse.Quit()
+			},
+		}
+
+		content := container.New(layout.NewVBoxLayout(), form, error_text)
+		main_window.SetContent(content)
+		main_window.ShowAndRun()
+	} else if mainCmd.Happened() {
+		err := parse(*wordlist, *output, *minLen, *maxLen, *phrase, *specialChar, *number, *verbose)
+		if err != nil {
+			log.Fatal(err)
+		}
+		elapsed := time.Since(start)
+		fmt.Println("\nParsed in", elapsed)
+	}
 }
