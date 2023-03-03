@@ -8,13 +8,40 @@ To get started, Download the latest release or compile from source.
 
 ```
 # listparse help
-$ listparse -h
-usage: list-parse [-h|--help] -w|--wordlist "<value>" -o|--output "<value>"
-                  [-m|--min-length "<value>"] [-x|--max-length "<value>"]
-                  [-p|--phrase "<value>"] [-s|--require-special-characters]
-                  [-n|--require-number]
+$ ./listparse -h          
+[sub]Command required
+usage: listparse <Command> [-h|--help]
 
-                  Creates more customized wordlist
+                 Creates more customized wordlist
+
+Commands:
+
+  gui     Launch listparse's gui
+  parser  User listparse as a command line tool
+
+Arguments:
+
+  -h  --help  Print help information
+```
+```
+$ listparse gui -h
+usage: listparse gui [-h|--help]
+
+                 Launch listparse's gui
+
+Arguments:
+
+  -h  --help  Print help information
+```
+```
+$ listparse parser -h
+usage: listparse parser [-h|--help] -w|--wordlist "<value>" -o|--output
+                 "<value>" [-m|--min-length "<value>"] [-x|--max-length
+                 "<value>"] [-p|--phrase "<value>"]
+                 [-s|--require-special-characters] [-n|--require-number]
+                 [-v|--verbose]
+
+                 User listparse as a command line tool
 
 Arguments:
 
@@ -25,11 +52,12 @@ Arguments:
   -m  --min-length                  Minimum length of line. Default: 0
   -x  --max-length                  Maximum length of line. Default: 0
   -p  --phrase                      Phrase/word that is required to be in the
-                                    line. Default:
+                                    line. Default: 
   -s  --require-special-characters  Require special characters
   -n  --require-number              Require Number
+  -v  --verbose                     Verbose mode
+
 ```
-*Please note -r currently does not work*
 ## Examples
 ```
 # Get all lines with only 8 characters and require special characters
